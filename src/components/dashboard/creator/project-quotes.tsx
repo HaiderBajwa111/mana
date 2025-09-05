@@ -14,6 +14,7 @@ import {
   Loader2,
   MessageSquare,
 } from "lucide-react";
+import { ChatButton } from "@/components/chat/chat-button";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "@/components/ui/use-toast";
 
@@ -183,10 +184,12 @@ export function ProjectQuotes({ projectId, projectTitle, onQuoteAccepted }: Proj
                 >
                   Accept Quote
                 </Button>
-                <Button size="sm" variant="outline">
-                  <MessageSquare className="w-4 h-4 mr-2" />
-                  Message Maker
-                </Button>
+                <ChatButton 
+                  projectId={projectId}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                />
               </div>
             )}
           </div>

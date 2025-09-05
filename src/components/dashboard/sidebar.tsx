@@ -25,6 +25,7 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useChatNotifications } from "@/hooks/use-chat-notifications";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -69,6 +70,7 @@ export default function Sidebar({ userType, user: userProp }: SidebarProps) {
     toggleMobile,
     closeMobile,
   } = useSidebar();
+  const { unreadCount } = useChatNotifications();
   const {
     user: fetchedUser,
     loading,
@@ -270,8 +272,22 @@ export default function Sidebar({ userType, user: userProp }: SidebarProps) {
                     : "text-muted-foreground hover:text-foreground hover:bg-accent"
                 )}
               >
-                <Icon className="h-4 w-4 flex-shrink-0" />
-                {!isMinimized && <span>{item.name}</span>}
+                <div className="relative">
+                  <Icon className="h-4 w-4 flex-shrink-0" />
+                  {item.name === "Messages" && unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full"></span>
+                  )}
+                </div>
+                {!isMinimized && (
+                  <div className="flex items-center justify-between w-full">
+                    <span>{item.name}</span>
+                    {item.name === "Messages" && unreadCount > 0 && (
+                      <span className="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                        {unreadCount > 99 ? "99+" : unreadCount}
+                      </span>
+                    )}
+                  </div>
+                )}
               </Link>
             );
           })}

@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { MapPin, Download, PackageCheck, Loader2, RefreshCw, Eye, Info } from "lucide-react";
+import { MapPin, Download, PackageCheck, Loader2, RefreshCw, Eye, Info, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/ui/use-toast";
 import { type AvailableProject } from "@/types/maker";
@@ -15,6 +15,7 @@ import { StaticSTLThumbnail } from "@/components/3d/static-stl-thumbnail";
 import { useState as useModalState } from "react";
 import { OptimizedSTLViewer } from "@/components/3d/optimized-stl-viewer";
 import { QuoteCalculatorModal } from "./quote-calculator-modal";
+import { ChatButton } from "@/components/chat/chat-button";
 
 export default function MakerDashboardView() {
   const [activeTab, setActiveTab] = useState<"new" | "inprogress" | "ready" | "completed">("new");
@@ -257,6 +258,12 @@ export default function MakerDashboardView() {
                       <Button variant="outline" size="icon" title="Download STL">
                         <Download className="w-4 h-4" />
                       </Button>
+                      <ChatButton 
+                        projectId={p.id}
+                        variant="outline"
+                        size="icon"
+                        title="Message Creator"
+                      />
                     </div>
                   </CardContent>
                 </Card>

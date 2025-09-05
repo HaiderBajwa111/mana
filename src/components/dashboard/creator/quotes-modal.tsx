@@ -61,6 +61,7 @@ export function QuotesModal({
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [loading, setLoading] = useState(true);
   const [acceptingQuote, setAcceptingQuote] = useState<string | null>(null);
+  const [selectedMaker, setSelectedMaker] = useState<{ id: string; name: string } | null>(null);
 
   useEffect(() => {
     if (open && projectId) {
@@ -121,6 +122,18 @@ export function QuotesModal({
     }
   };
 
+  const handleMessageMaker = (makerId: string, makerName: string) => {
+    setSelectedMaker({ id: makerId, name: makerName });
+    // Close the quotes modal and open chat interface
+    onOpenChange(false);
+    // You can add additional logic here to open a chat interface
+    // For now, we'll show a toast with the maker info
+    toast({
+      title: "Opening Chat",
+      description: `Starting conversation with ${makerName}`,
+    });
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[80vh] p-0">
@@ -155,8 +168,9 @@ export function QuotesModal({
                   ? parseFloat(quote.price) 
                   : quote.price;
                 const businessName = quote.manufacturerProfile?.businessName || 
-                  `${quote.manufacturer.firstName || ""} ${quote.manufacturer.lastName || ""}`.trim() || 
-                  "Maker";
+                  (quote.manufacturer.firstName || quote.manufacturer.lastName 
+                    ? `${quote.manufacturer.firstName || ""} ${quote.manufacturer.lastName || ""}`.trim()
+                    : "Maker");
 
                 return (
                   <div
@@ -234,6 +248,7 @@ export function QuotesModal({
                           <Button
                             size="sm"
                             variant="outline"
+                            onClick={() => handleMessageMaker(quote.manufacturer.id, businessName)}
                           >
                             <MessageSquare className="w-4 h-4 mr-2" />
                             Message
