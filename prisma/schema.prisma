@@ -1,0 +1,399 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id                  String               @id @db.Uuid
+  username            String?              @unique
+  email               String               @unique
+  externalAuthId      String?              @unique
+  profilePictureUrl   String?
+  createdAt           DateTime             @default(now()) @db.Timestamptz(6)
+  firstName           String?
+  lastName            String?
+  onboardingCompleted Boolean              @default(false)
+  defaultRole         String?
+  stripeCustomerId    String?              @unique
+  updatedAt           DateTime             @updatedAt @db.Timestamptz(6)
+  creatorProfile      CreatorProfile?
+  fileAttachments     FileAttachment[]
+  manufacturerProfile ManufacturerProfile?
+  messages            Message[]
+  projects            Project[]            @relation("ProjectCreator")
+  assignedProjects    Project[]            @relation("ProjectManufacturer")
+  quotes              Quote[]              @relation("QuoteCreator")
+  manufacturerQuotes  Quote[]              @relation("QuoteManufacturer")
+  sampleWorkPhotos    SampleWorkPhoto[]
+  userPhotos          UserPhoto[]
+
+  @@index([email])
+  @@index([username])
+  @@index([onboardingCompleted])
+  @@map("users")
+}
+
+model CreatorProfile {
+  userId            String                @unique @db.Uuid
+  bio               String?
+  location          String?
+  designPreferences String?
+  canPickupLocally  Boolean               @default(false)
+  businessName      String?
+  portfolioLink     String?
+  createdAt         DateTime              @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime              @updatedAt @db.Timestamptz(6)
+  id                String                @id @default(uuid()) @db.Uuid
+  creatorType       CreatorType           @default(HOBBYIST)
+  accountType       AccountType           @default(INDIVIDUAL)
+  user              User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeAccount     CreatorStripeAccount?
+
+  @@index([userId])
+  @@index([creatorType])
+  @@index([location])
+  @@map("creator_profiles")
+}
+
+model CreatorStripeAccount {
+  creatorProfileId                String         @unique @db.Uuid
+  stripeAccountId                 String
+  stripeAccountEnabled            Boolean        @default(false)
+  stripeAccountOnboardingComplete Boolean        @default(false)
+  createdAt                       DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt                       DateTime       @updatedAt @db.Timestamptz(6)
+  id                              String         @id @default(uuid()) @db.Uuid
+  creatorProfile                  CreatorProfile @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
+
+  @@index([creatorProfileId])
+  @@index([stripeAccountId])
+  @@map("creator_stripe_accounts")
+}
+
+model ManufacturerProfile {
+  userId               String                     @unique @db.Uuid
+  businessName         String
+  description          String?
+  streetAddress        String?
+  city                 String?
+  state                String?
+  country              String                     @default("Unknown")
+  capabilities         String?
+  shippingCapabilities Json?                      @default("{}")
+  printers             Json?                      @default("[]")
+  createdAt            DateTime                   @default(now()) @db.Timestamptz(6)
+  postalCode           String?
+  updatedAt            DateTime                   @updatedAt @db.Timestamptz(6)
+  id                   String                     @id @default(uuid()) @db.Uuid
+  manufacturerPrinters ManufacturerPrinter[]
+  user                 User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeAccount        ManufacturerStripeAccount?
+  quotes               Quote[]
+
+  @@index([userId])
+  @@index([businessName])
+  @@index([city])
+  @@index([state])
+  @@index([country])
+  @@map("manufacturer_profiles")
+}
+
+model ManufacturerStripeAccount {
+  manufacturerProfileId           String              @unique @db.Uuid
+  stripeAccountId                 String
+  stripeAccountEnabled            Boolean             @default(false)
+  stripeAccountOnboardingComplete Boolean             @default(false)
+  createdAt                       DateTime            @default(now()) @db.Timestamptz(6)
+  updatedAt                       DateTime            @updatedAt @db.Timestamptz(6)
+  id                              String              @id @default(uuid()) @db.Uuid
+  manufacturerProfile             ManufacturerProfile @relation(fields: [manufacturerProfileId], references: [id], onDelete: Cascade)
+
+  @@index([manufacturerProfileId])
+  @@index([stripeAccountId])
+  @@map("manufacturer_stripe_accounts")
+}
+
+model Brand {
+  id     Int            @id @default(autoincrement())
+  name   String         @unique
+  models PrinterModel[]
+
+  @@index([name])
+  @@map("brands")
+}
+
+model PrinterModel {
+  id                   Int                   @id @default(autoincrement())
+  name                 String
+  buildVolume          String
+  type                 PrinterType
+  brandId              Int
+  createdAt            DateTime              @default(now()) @db.Timestamptz(6)
+  updatedAt            DateTime              @updatedAt @db.Timestamptz(6)
+  manufacturerPrinters ManufacturerPrinter[]
+  brand                Brand                 @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  @@index([brandId])
+  @@index([type])
+  @@index([name])
+  @@map("printer_models")
+}
+
+model ManufacturerPrinter {
+  printerModelId        Int
+  customName            String?
+  quantity              Int                 @default(1)
+  notes                 String?
+  createdAt             DateTime            @default(now()) @db.Timestamptz(6)
+  updatedAt             DateTime            @updatedAt @db.Timestamptz(6)
+  status                PrinterStatus       @default(AVAILABLE)
+  id                    String              @id @default(uuid()) @db.Uuid
+  manufacturerProfileId String              @db.Uuid
+  manufacturerProfile   ManufacturerProfile @relation(fields: [manufacturerProfileId], references: [id], onDelete: Cascade)
+  printerModel          PrinterModel        @relation(fields: [printerModelId], references: [id], onDelete: Cascade)
+
+  @@index([printerModelId])
+  @@index([manufacturerProfileId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("manufacturer_printers")
+}
+
+model Project {
+  creatorId          String         @db.Uuid
+  manufacturerId     String?        @db.Uuid
+  title              String
+  description        String
+  fileUrl            String
+  fileName           String
+  fileSize           Int
+  thumbnailUrl       String?
+  quantity           Int            @default(1)
+  createdAt          DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt          DateTime       @updatedAt @db.Timestamptz(6)
+  paymentStatus      PaymentStatus  @default(PENDING)
+  status             ProjectStatus  @default(SUBMITTED)
+  color              String
+  customColor        String?
+  deadline           DateTime?      @db.Timestamptz(6)
+  designNotes        String?
+  finish             String
+  infill             Int            @default(20)
+  infillPattern      String         @default("grid")
+  material           Material
+  referenceImageUrl  String?
+  resolution         String
+  scale              Int            @default(100)
+  id                 String         @id @default(uuid()) @db.Uuid
+  conversations      Conversation[]
+  creator            User           @relation("ProjectCreator", fields: [creatorId], references: [id], onDelete: NoAction)
+  manufacturer       User?          @relation("ProjectManufacturer", fields: [manufacturerId], references: [id], onDelete: NoAction)
+  quotes             Quote[]
+
+  @@index([creatorId])
+  @@index([manufacturerId])
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([material])
+  @@index([createdAt])
+  @@index([deadline])
+  @@map("projects")
+}
+
+model Quote {
+  id                    String              @id @default(uuid()) @db.Uuid
+  projectId             String              @db.Uuid
+  manufacturerId        String              @db.Uuid
+  creatorId             String              @db.Uuid
+  manufacturerProfileId String              @db.Uuid
+  status                QuoteStatus         @default(PENDING)
+  price                 Decimal             @db.Decimal(10, 2)
+  notes                 String?
+  estimatedDeliveryDays Int?
+  createdAt             DateTime            @default(now()) @db.Timestamptz(6)
+  updatedAt             DateTime            @updatedAt @db.Timestamptz(6)
+  creator               User                @relation("QuoteCreator", fields: [creatorId], references: [id], onDelete: NoAction)
+  manufacturer          User                @relation("QuoteManufacturer", fields: [manufacturerId], references: [id], onDelete: NoAction)
+  manufacturerProfile   ManufacturerProfile @relation(fields: [manufacturerProfileId], references: [id], onDelete: Cascade)
+  project               Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([manufacturerId])
+  @@index([creatorId])
+  @@index([manufacturerProfileId])
+  @@index([status])
+  @@index([price])
+  @@index([createdAt])
+  @@map("quotes")
+}
+
+model Conversation {
+  title     String
+  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @db.Timestamptz(6)
+  id        String    @id @default(uuid()) @db.Uuid
+  projectId String    @db.Uuid
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  messages  Message[]
+
+  @@index([projectId])
+  @@index([createdAt])
+  @@map("conversations")
+}
+
+model Message {
+  senderId        String           @db.Uuid
+  content         String
+  isRead          Boolean          @default(false)
+  createdAt       DateTime         @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime         @updatedAt @db.Timestamptz(6)
+  id              String           @id @default(uuid()) @db.Uuid
+  conversationId  String           @db.Uuid
+  fileAttachments FileAttachment[]
+  conversation    Conversation     @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender          User             @relation(fields: [senderId], references: [id], onDelete: NoAction)
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("messages")
+}
+
+model FileAttachment {
+  userId    String   @db.Uuid
+  fileName  String
+  fileType  String
+  fileSize  Int
+  fileUrl   String
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  mimeType  String?
+  id        String   @id @default(uuid()) @db.Uuid
+  messageId String   @db.Uuid
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: NoAction)
+
+  @@index([messageId])
+  @@index([userId])
+  @@index([fileType])
+  @@index([createdAt])
+  @@map("file_attachments")
+}
+
+model UserPhoto {
+  userId    String    @db.Uuid
+  fileName  String
+  fileUrl   String
+  fileSize  Int
+  mimeType  String
+  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @db.Timestamptz(6)
+  id        String    @id @default(uuid()) @db.Uuid
+  photoType PhotoType
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([photoType])
+  @@index([createdAt])
+  @@map("user_photos")
+}
+
+model SampleWorkPhoto {
+  userId    String   @db.Uuid
+  fileName  String
+  fileUrl   String
+  fileSize  Int
+  mimeType  String
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @db.Timestamptz(6)
+  id        String   @id @default(uuid()) @db.Uuid
+  projectId String?  @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([createdAt])
+  @@map("sample_work_photos")
+}
+
+enum PrinterType {
+  FDM
+  SLA
+  SLS
+  DLP
+  POLYJET
+}
+
+enum PrinterStatus {
+  AVAILABLE
+  BUSY
+  MAINTENANCE
+  OFFLINE
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum ProjectStatus {
+  DRAFT
+  SUBMITTED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  QUOTED
+  APPROVED
+  ON_HOLD
+}
+
+enum Material {
+  PLA
+  ABS
+  PETG
+  TPU
+  RESIN
+  NYLON
+  CARBON_FIBER
+  METAL
+  WOOD
+  CERAMIC
+  POLYCARBONATE
+  FLEXIBLE
+}
+
+enum QuoteStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
+  WITHDRAWN
+}
+
+enum CreatorType {
+  HOBBYIST
+  PROFESSIONAL
+  STUDENT
+  BUSINESS
+}
+
+enum AccountType {
+  INDIVIDUAL
+  BUSINESS
+  CORPORATION
+}
+
+enum PhotoType {
+  PROFILE
+  PORTFOLIO
+  SAMPLE_WORK
+  REFERENCE
+}

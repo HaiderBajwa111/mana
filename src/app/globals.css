@@ -1,0 +1,243 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles for the mobile menu sheet */
+.mobile-menu-sheet > button {
+  display: none !important;
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 100%; /* Pure white background */
+    --foreground: 222.2 84% 4.9%; /* Very dark gray/black for headings */
+    --card: 0 0% 100%; /* White card backgrounds */
+    --card-foreground: 222.2 84% 4.9%; /* Dark text on cards */
+    --popover: 0 0% 100%; /* White popover backgrounds */
+    --popover-foreground: 222.2 84% 4.9%; /* Dark text on popovers */
+    --primary: 221.2 83.2% 53.3%; /* Blue-600 for primary elements */
+    --primary-foreground: 0 0% 100%; /* White text on primary elements */
+    --secondary: 210 40% 96%; /* Very light gray for secondary backgrounds */
+    --secondary-foreground: 222.2 84% 4.9%; /* Dark text on secondary */
+    --muted: 210 40% 96%; /* Light gray for muted backgrounds */
+    --muted-foreground: 215.4 16.3% 46.9%; /* Medium gray for muted text */
+    --accent: 210 40% 96%; /* Light gray for accent backgrounds */
+    --accent-foreground: 222.2 84% 4.9%; /* Dark text on accents */
+    --destructive: 0 84.2% 60.2%; /* Red for destructive actions */
+    --destructive-foreground: 0 0% 100%; /* White text on destructive */
+    --border: 214.3 31.8% 91.4%; /* Light gray borders */
+    --input: 214.3 31.8% 91.4%; /* Light gray input borders */
+    --ring: 221.2 83.2% 53.3%; /* Blue ring color */
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 84% 4.9%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 94.1%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+  
+  /* Dark mode specific enhancement for better readability and contrast */
+  .dark {
+    --card-bg-soft: rgba(30, 41, 59, 0.5);
+    --hover-bg: rgba(71, 85, 105, 0.1);
+    color-scheme: dark;
+  }
+  
+  /* Dark mode card enhancements */
+  .dark .bg-white {
+    @apply bg-zinc-900;
+  }
+  
+  .dark .border-blue-100 {
+    @apply border-blue-900;
+  }
+  
+  .dark .bg-primary\/5 {
+    background-color: var(--card-bg-soft);
+  }
+  
+  .dark .bg-blue-100 {
+    @apply bg-blue-900/30;
+  }
+  
+  .dark .border-blue-200 {
+    @apply border-blue-800;
+  }
+  
+  /* Improved hover states for dark mode */
+  .dark .hover\:bg-accent\/10:hover {
+    background-color: var(--hover-bg);
+  }
+}
+
+/* Custom scrollbar for WebKit browsers */
+.scrollbar-thin::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  @apply bg-muted rounded-full;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted-foreground;
+}
+
+/* Firefox scrollbar */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: theme("colors.muted.DEFAULT") transparent;
+}
+
+/* Scroll-triggered Animation Base States */
+.initial-hidden-content {
+  @apply opacity-0;
+}
+.initial-hidden-fade-up {
+  @apply opacity-0 translate-y-5;
+}
+.initial-hidden-fade-down {
+  @apply opacity-0 -translate-y-5;
+}
+.initial-hidden-fade-left {
+  @apply opacity-0 -translate-x-5;
+}
+.initial-hidden-fade-right {
+  @apply opacity-0 translate-x-5;
+}
+.initial-hidden-scale-sm {
+  @apply opacity-0 scale-90;
+}
+
+/* Scroll-triggered Animation Visible States (applied by ScrollAnimatedContent) */
+.animate-fade-in {
+  @apply opacity-100;
+}
+.animate-fade-in-up {
+  @apply opacity-100 translate-y-0;
+}
+.animate-fade-in-down {
+  @apply opacity-100 translate-y-0;
+}
+.animate-fade-in-left {
+  @apply opacity-100 translate-x-0;
+}
+.animate-fade-in-right {
+  @apply opacity-100 translate-x-0;
+}
+.animate-scale-in {
+  @apply opacity-100 scale-100;
+}
+
+/* Tailwind CSS animation 'fadeIn' (used for initial page load, not scroll) */
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.fadeIn {
+  animation: fadeIn 0.8s ease-in-out forwards;
+}
+
+/* For sections that should animate when they become visible (legacy, prefer new component) */
+.section-animate {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 0.6s ease-out,
+    transform 0.6s ease-out;
+}
+
+.section-animate.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Tailwind animation delays (can be generated with a plugin or listed manually if few) */
+.delay-100ms {
+  animation-delay: 100ms;
+  transition-delay: 100ms !important;
+}
+.delay-200ms {
+  animation-delay: 200ms;
+  transition-delay: 200ms !important;
+}
+.delay-300ms {
+  animation-delay: 300ms;
+  transition-delay: 300ms !important;
+}
+.delay-400ms {
+  animation-delay: 400ms;
+  transition-delay: 400ms !important;
+}
+.delay-500ms {
+  animation-delay: 500ms;
+  transition-delay: 500ms !important;
+}
+
+/* Animated Footer Background */
+.animated-gradient-footer-bg {
+  background: linear-gradient(
+    -60deg,
+    theme("colors.muted.DEFAULT / 0.9"),
+    theme("colors.muted.DEFAULT / 0.6"),
+    theme("colors.primary.DEFAULT / 0.15"),
+    theme("colors.accent.DEFAULT / 0.15"),
+    theme("colors.primary.DEFAULT / 0.1"),
+    theme("colors.muted.DEFAULT / 0.6"),
+    theme("colors.muted.DEFAULT / 0.9")
+  );
+  background-size: 300% 300%;
+  animation: gradientFlowFooter 20s ease infinite;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0; /* Behind content */
+  pointer-events: none;
+  opacity: 0.7; /* Make it more subtle */
+}
+
+@keyframes gradientFlowFooter {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
