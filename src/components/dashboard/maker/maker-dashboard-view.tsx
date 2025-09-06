@@ -36,13 +36,13 @@ export default function MakerDashboardView() {
 
   const fetchProjects = async () => {
     try {
-      const res = await fetch("/api/maker/available-projects", { credentials: "same-origin" });
+      const res = await fetch("/api/maker/projects", { credentials: "same-origin" });
       if (!res.ok) throw new Error(String(res.status));
       const data = await res.json();
       setProjects(data);
       return data;
     } catch (e) {
-      toast({ title: "Error", description: "Failed to load available projects", variant: "destructive" });
+      toast({ title: "Error", description: "Failed to load projects", variant: "destructive" });
       return [];
     }
   };
@@ -65,13 +65,13 @@ export default function MakerDashboardView() {
     return () => clearInterval(interval);
   }, [toast]);
 
-  // Temporary bucketing by index to demo tabs
+  // Group projects by status
   const groups = useMemo(() => {
     return {
-      NEW: projects.slice(0, Math.max(0, projects.length)),
-      IN_PROGRESS: [],
-      READY: [],
-      COMPLETED: [],
+      NEW: projects.filter(p => !p.isAssigned && p.status === "SUBMITTED"),
+      IN_PROGRESS: projects.filter(p => p.isAssigned && p.status === "IN_PROGRESS"),
+      READY: projects.filter(p => p.isAssigned && p.status === "READY"),
+      COMPLETED: projects.filter(p => p.isAssigned && p.status === "COMPLETED"),
     };
   }, [projects]);
 
@@ -241,11 +241,35 @@ export default function MakerDashboardView() {
                           Send Quote
                         </Button>
                       ) : key==="inprogress" ? (
-                        <Button variant="outline">Update Status</Button>
+                        <Button 
+                          variant="outline"
+                          onClick={() => {
+                            // TODO: Implement status update functionality
+                            toast({ title: "Feature Coming Soon", description: "Status update functionality will be available soon" });
+                          }}
+                        >
+                          Update Status
+                        </Button>
                       ) : key==="ready" ? (
-                        <Button variant="outline">View Pickup Details</Button>
+                        <Button 
+                          variant="outline"
+                          onClick={() => {
+                            // TODO: Implement pickup details functionality
+                            toast({ title: "Feature Coming Soon", description: "Pickup details functionality will be available soon" });
+                          }}
+                        >
+                          View Pickup Details
+                        </Button>
                       ) : (
-                        <Button variant="outline" asChild><Link href="#">View Review</Link></Button>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => {
+                            // TODO: Implement review functionality
+                            toast({ title: "Feature Coming Soon", description: "Review functionality will be available soon" });
+                          }}
+                        >
+                          View Review
+                        </Button>
                       )}
                       <Button 
                         variant="outline" 
@@ -262,7 +286,8 @@ export default function MakerDashboardView() {
                         projectId={p.id}
                         variant="outline"
                         size="icon"
-                        title="Message Creator"
+                        title={p.isAssigned ? "Message Creator" : "Chat available after project is accepted"}
+                        disabled={!p.isAssigned}
                       />
                     </div>
                   </CardContent>

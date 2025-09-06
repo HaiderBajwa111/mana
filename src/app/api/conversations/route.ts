@@ -30,9 +30,7 @@ export async function GET(request: NextRequest) {
         project: {
           OR: [
             { creatorId: userId },
-            { manufacturerId: userId },
-            // Allow access to conversations for available projects (no assigned manufacturer)
-            { manufacturerId: null }
+            { manufacturerId: userId }
           ]
         }
       },
@@ -81,6 +79,17 @@ export async function GET(request: NextRequest) {
     const filteredConversations = projectId 
       ? conversations.filter(conv => conv.projectId === projectId)
       : conversations;
+
+    console.log("🔍 [CONVERSATIONS_GET] Returning conversations:", {
+      count: filteredConversations.length,
+      conversations: filteredConversations.map(conv => ({
+        id: conv.id,
+        title: conv.title,
+        hasProject: !!conv.project,
+        projectTitle: conv.project?.title,
+        projectId: conv.project?.id
+      }))
+    });
 
     return NextResponse.json(filteredConversations);
   } catch (error) {
@@ -133,9 +142,7 @@ export async function POST(request: NextRequest) {
         id: projectId,
         OR: [
           { creatorId: userId },
-          { manufacturerId: userId },
-          // Allow any authenticated user to create conversations for available projects (no assigned manufacturer)
-          { manufacturerId: null }
+          { manufacturerId: userId }
         ]
       }
     });

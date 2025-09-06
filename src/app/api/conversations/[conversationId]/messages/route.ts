@@ -36,9 +36,7 @@ export async function GET(
         project: {
           OR: [
             { creatorId: userId },
-            { manufacturerId: userId },
-            // Allow access to conversations for available projects (no assigned manufacturer)
-            { manufacturerId: null }
+            { manufacturerId: userId }
           ]
         }
       }
@@ -104,9 +102,12 @@ export async function POST(
   { params }: { params: { conversationId: string } }
 ) {
   try {
+    console.log("🔍 [MESSAGE_CREATE] Starting message creation");
+    
     const currentUser = await getCurrentUser();
     
     if (!currentUser || !currentUser.success) {
+      console.log("🔍 [MESSAGE_CREATE] Unauthorized - no current user");
       return NextResponse.json(
         { message: "Unauthorized" },
         { status: 401 }
@@ -114,6 +115,7 @@ export async function POST(
     }
     
     if (!("user" in currentUser)) {
+      console.log("🔍 [MESSAGE_CREATE] Invalid user response");
       return NextResponse.json(
         { message: "Invalid user response" },
         { status: 500 }
@@ -124,10 +126,17 @@ export async function POST(
     const { conversationId } = params;
     const body = await request.json();
     const { content, fileAttachments = [] } = body;
+    
+    console.log("🔍 [MESSAGE_CREATE] Request data:", { 
+      userId, 
+      conversationId, 
+      hasContent: !!content?.trim(), 
+      fileAttachmentCount: fileAttachments.length 
+    });
 
-    if (!content?.trim()) {
+    if (!content?.trim() && fileAttachments.length === 0) {
       return NextResponse.json(
-        { message: "Message content is required" },
+        { message: "Message content or file attachments are required" },
         { status: 400 }
       );
     }
@@ -139,9 +148,7 @@ export async function POST(
         project: {
           OR: [
             { creatorId: userId },
-            { manufacturerId: userId },
-            // Allow access to conversations for available projects (no assigned manufacturer)
-            { manufacturerId: null }
+            { manufacturerId: userId }
           ]
         }
       }
@@ -199,9 +206,10 @@ export async function POST(
       data: { updatedAt: new Date() }
     });
 
+    console.log("🔍 [MESSAGE_CREATE] Message created successfully:", message.id);
     return NextResponse.json(message);
   } catch (error) {
-    console.error("Error creating message:", error);
+    console.error("🔍 [MESSAGE_CREATE] Error creating message:", error);
     return NextResponse.json(
       { message: "Failed to create message" },
       { status: 500 }

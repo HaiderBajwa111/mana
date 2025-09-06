@@ -55,7 +55,9 @@ export function useRealtimeChat() {
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  
   const supabase = createClient();
+  
   const { toast } = useToast();
   const subscriptionsRef = useRef<Map<string, any>>(new Map());
 

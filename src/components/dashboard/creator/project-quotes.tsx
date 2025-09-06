@@ -189,6 +189,8 @@ export function ProjectQuotes({ projectId, projectTitle, onQuoteAccepted }: Proj
                   variant="outline"
                   size="sm"
                   className="flex items-center gap-2"
+                  disabled={true}
+                  title="Chat available after accepting the quote"
                 />
               </div>
             )}

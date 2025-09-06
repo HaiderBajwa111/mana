@@ -27,6 +27,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useRealtimeChat, type Conversation, type Message } from "@/hooks/use-realtime-chat";
+import { ChatFileUpload } from "./chat-file-upload";
+import { type ChatFileAttachment } from "@/hooks/use-chat-file-upload";
+import { useCurrentUser } from "@/hooks/auth/use-current-user";
 import { formatDistanceToNow } from "date-fns";
 
 interface ChatInterfaceProps {
@@ -43,12 +46,14 @@ export function ChatInterface({
   initialConversationId 
 }: ChatInterfaceProps) {
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(
-    initialConversationId || null
+    initialConversationId ?? null
   );
   const [messageText, setMessageText] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [pendingAttachments, setPendingAttachments] = useState<ChatFileAttachment[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
+  const { user } = useCurrentUser();
   const {
     conversations,
     messages,
@@ -86,10 +91,15 @@ export function ChatInterface({
   }, [projectId, isOpen, selectedConversationId, conversations, getOrCreateConversation]);
 
   const handleSendMessage = async () => {
-    if (!messageText.trim() || !selectedConversationId || sending) return;
+    if ((!messageText.trim() && pendingAttachments.length === 0) || !selectedConversationId || sending) return;
     
-    await sendMessage(selectedConversationId, messageText);
+    await sendMessage(selectedConversationId, messageText, pendingAttachments);
     setMessageText("");
+    setPendingAttachments([]);
+  };
+
+  const handleFilesSelected = (attachments: ChatFileAttachment[]) => {
+    setPendingAttachments(prev => [...prev, ...attachments]);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -100,8 +110,8 @@ export function ChatInterface({
   };
 
   const filteredConversations = conversations.filter(conv =>
-    conv.project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    conv.title.toLowerCase().includes(searchQuery.toLowerCase())
+    conv?.project?.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    conv?.title?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const selectedConversation = conversations.find(conv => conv.id === selectedConversationId);
@@ -110,7 +120,11 @@ export function ChatInterface({
   const getOtherUser = (conversation: Conversation) => {
     // This would need to be determined based on current user context
     // For now, we'll show the creator or manufacturer
-    return conversation.project.manufacturer || conversation.project.creator;
+    return conversation?.project?.manufacturer || conversation?.project?.creator || { 
+      id: "unknown", 
+      firstName: "Unknown", 
+      lastName: "User" 
+    };
   };
 
   const formatMessageTime = (dateString: string) => {
@@ -182,6 +196,12 @@ export function ChatInterface({
                   </div>
                 ) : (
                   filteredConversations.map((conversation) => {
+                    // Skip conversations with missing data
+                    if (!conversation || !conversation.project) {
+                      console.warn("Skipping conversation with missing data:", conversation);
+                      return null;
+                    }
+                    
                     const otherUser = getOtherUser(conversation);
                     const lastMessage = conversation.messages?.[0];
                     
@@ -317,7 +337,37 @@ export function ChatInterface({
                                 : "bg-primary text-primary-foreground"
                             }`}
                           >
-                            <p className="text-sm">{message.content}</p>
+                            {message.content && <p className="text-sm">{message.content}</p>}
+                            
+                            {/* File attachments */}
+                            {message.fileAttachments && message.fileAttachments.length > 0 && (
+                              <div className="mt-2 space-y-2">
+                                {message.fileAttachments.map((attachment) => (
+                                  <div key={attachment.id} className="flex items-center gap-2 p-2 bg-background/50 rounded">
+                                    {attachment.fileType === "stl" || attachment.fileType === "obj" || attachment.fileType === "3mf" ? (
+                                      <FileText className="w-4 h-4" />
+                                    ) : (
+                                      <Image className="w-4 h-4" />
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-medium truncate">{attachment.fileName}</p>
+                                      <p className="text-xs opacity-70">
+                                        {(attachment.fileSize / 1024).toFixed(1)} KB
+                                      </p>
+                                    </div>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => window.open(attachment.fileUrl, '_blank')}
+                                      className="h-6 px-2 text-xs"
+                                    >
+                                      View
+                                    </Button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            
                             <div className="flex items-center justify-between mt-1">
                               <span className="text-xs opacity-70">
                                 {formatMessageTime(message.createdAt)}
@@ -338,13 +388,50 @@ export function ChatInterface({
 
                 {/* Message Input */}
                 <div className="p-4 border-t">
+                  {/* Pending attachments */}
+                  {pendingAttachments.length > 0 && (
+                    <div className="mb-3 p-2 bg-muted rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-sm font-medium">Attachments:</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setPendingAttachments([])}
+                          className="h-6 w-6 p-0"
+                        >
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {pendingAttachments.map((attachment, index) => (
+                          <div key={attachment.id} className="flex items-center gap-1 px-2 py-1 bg-background rounded text-xs">
+                            {attachment.fileType === "stl" || attachment.fileType === "obj" ? (
+                              <FileText className="w-3 h-3" />
+                            ) : (
+                              <Image className="w-3 h-3" />
+                            )}
+                            <span className="truncate max-w-[100px]">{attachment.fileName}</span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setPendingAttachments(prev => prev.filter((_, i) => i !== index))}
+                              className="h-4 w-4 p-0"
+                            >
+                              <X className="w-2 h-2" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm">
-                      <Paperclip className="h-4 w-4" />
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      <Image className="h-4 w-4" />
-                    </Button>
+                    <ChatFileUpload 
+                      onFilesSelected={handleFilesSelected}
+                      disabled={sending}
+                      userId={user?.id}
+                      conversationId={selectedConversationId || undefined}
+                    />
                     <Input
                       placeholder="Type your message..."
                       value={messageText}
@@ -355,7 +442,7 @@ export function ChatInterface({
                     />
                     <Button
                       onClick={handleSendMessage}
-                      disabled={!messageText.trim() || sending}
+                      disabled={(!messageText.trim() && pendingAttachments.length === 0) || sending}
                     >
                       <Send className="h-4 w-4" />
                     </Button>

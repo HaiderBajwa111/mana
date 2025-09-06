@@ -202,10 +202,20 @@ export function QuotesModal({
                         </div>
                       </div>
                       {quote.status === "ACCEPTED" && (
-                        <Badge className="bg-green-100 text-green-700 border-green-200">
-                          <CheckCircle className="w-3 h-3 mr-1" />
-                          Accepted
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge className="bg-green-100 text-green-700 border-green-200">
+                            <CheckCircle className="w-3 h-3 mr-1" />
+                            Accepted
+                          </Badge>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleMessageMaker(quote.manufacturer.id, businessName)}
+                          >
+                            <MessageSquare className="w-4 h-4 mr-2" />
+                            Message
+                          </Button>
+                        </div>
                       )}
                     </div>
 
@@ -248,7 +258,8 @@ export function QuotesModal({
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleMessageMaker(quote.manufacturer.id, businessName)}
+                            disabled={true}
+                            title="Chat available after accepting the quote"
                           >
                             <MessageSquare className="w-4 h-4 mr-2" />
                             Message

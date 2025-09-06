@@ -63,6 +63,7 @@
     "expo-gl": "latest",
     "framer-motion": "latest",
     "input-otp": "1.4.1",
+    "leaflet": "^1.9.4",
     "lucide-react": "^0.454.0",
     "next": "^15.4.6",
     "next-themes": "^0.4.6",
@@ -74,6 +75,7 @@
     "react-dom": "^19.1.1",
     "react-hook-form": "^7.62.0",
     "react-intersection-observer": "^9.16.0",
+    "react-leaflet": "^5.0.0",
     "react-native": "latest",
     "react-resizable-panels": "^2.1.9",
     "recharts": "2.15.0",
@@ -88,6 +90,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@types/leaflet": "^1.9.20",
     "@types/node": "^22.17.1",
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",

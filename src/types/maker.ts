@@ -31,4 +31,8 @@ export interface AvailableProject {
     lat: number;
     lng: number;
   };
+  // Additional fields for maker dashboard
+  status?: string;
+  manufacturerId?: string | null;
+  isAssigned?: boolean;
 }

@@ -7,7 +7,9 @@ import { useToast } from "@/hooks/ui/use-toast";
 export function useChatNotifications() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [lastMessage, setLastMessage] = useState<any>(null);
+  
   const supabase = createClient();
+  
   const { toast } = useToast();
 
   useEffect(() => {

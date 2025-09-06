@@ -14,6 +14,8 @@ interface ChatButtonProps {
   size?: "sm" | "default" | "lg";
   className?: string;
   showUnreadCount?: boolean;
+  disabled?: boolean;
+  title?: string;
 }
 
 export function ChatButton({ 
@@ -22,7 +24,9 @@ export function ChatButton({
   variant = "outline",
   size = "default",
   className = "",
-  showUnreadCount = true
+  showUnreadCount = true,
+  disabled = false,
+  title
 }: ChatButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const { conversations } = useRealtimeChat();
@@ -66,6 +70,8 @@ export function ChatButton({
         size={size}
         onClick={() => setIsOpen(true)}
         className={`relative ${className}`}
+        disabled={disabled}
+        title={title}
       >
         <MessageSquare className="h-4 w-4" />
         {unreadCount > 0 && (
